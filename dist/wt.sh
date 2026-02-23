@@ -59,17 +59,13 @@ _wt_complete() {
   local cur prev words cword
   COMPREPLY=()
 
-  # Captura palavras de forma compatível, mesmo sem bash-completion instalado
-  if declare -F _get_comp_words_by_ref >/dev/null 2>&1; then
-    _get_comp_words_by_ref -n : cur prev words cword
-  else
-    cur=${COMP_WORDS[COMP_CWORD]}
-    prev=${COMP_WORDS[COMP_CWORD-1]}
-    words=(${COMP_WORDS[*]})
-    cword=${COMP_CWORD}
-  fi
+  # Captura palavras de forma compativel
+  cur=${COMP_WORDS[COMP_CWORD]}
+  prev=${COMP_WORDS[COMP_CWORD-1]}
+  words=("${COMP_WORDS[@]}")
+  cword=${COMP_CWORD}
 
-  # Primeira posição após o comando: sugerir subcomandos
+  # Primeira posicao apos o comando: sugerir subcomandos
   if [[ $cword -eq 1 ]]; then
     COMPREPLY=( $(compgen -W "add ls rm update completion" -- "$cur") )
     return 0
@@ -77,7 +73,7 @@ _wt_complete() {
 
   local subcmd=${words[1]}
 
-  # Autocomplete específico para 'rm': sugerir branches que possuem worktree
+  # Autocomplete especifico para 'rm': sugerir branches que possuem worktree
   if [[ $subcmd == rm && $cword -eq 2 ]]; then
     # Extrai nomes de branches de 'git worktree list --porcelain'
     local branches
