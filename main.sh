@@ -82,3 +82,4 @@ case "$COMMAND" in
     usage
     ;;
 esac
+# test comment
