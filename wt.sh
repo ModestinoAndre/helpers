@@ -3,7 +3,7 @@
 set -e
 
 # Versão atual do script
-VERSION="1.0.3"
+VERSION="1.0.5"
 SCRIPT_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/refs/heads/main/wt.sh"
 INSTALLER_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/refs/heads/main/install.sh"
 
@@ -39,14 +39,66 @@ check_for_updates() {
   fi
 }
 
+# --- Bash completion (geração) ---
+wt_completion_script() {
+  cat <<'__WT_BASH_COMPLETION__'
+# bash completion para o comando 'wt'
+# Para ativar no shell atual: source <(wt completion)
+# Ou adicione a linha acima ao seu ~/.bashrc ou ~/.bash_profile
+
+_wt_complete() {
+  local cur prev words cword
+  COMPREPLY=()
+
+  # Captura palavras de forma compatível, mesmo sem bash-completion instalado
+  if declare -F _get_comp_words_by_ref >/dev/null 2>&1; then
+    _get_comp_words_by_ref -n : cur prev words cword
+  else
+    cur=${COMP_WORDS[COMP_CWORD]}
+    prev=${COMP_WORDS[COMP_CWORD-1]}
+    words=(${COMP_WORDS[*]})
+    cword=${COMP_CWORD}
+  fi
+
+  # Primeira posição após o comando: sugerir subcomandos
+  if [[ $cword -eq 1 ]]; then
+    COMPREPLY=( $(compgen -W "add ls rm update completion" -- "$cur") )
+    return 0
+  fi
+
+  local subcmd=${words[1]}
+
+  # Autocomplete específico para 'rm': sugerir branches que possuem worktree
+  if [[ $subcmd == rm && $cword -eq 2 ]]; then
+    # Extrai nomes de branches de 'git worktree list --porcelain'
+    local branches
+    branches=$(git worktree list --porcelain 2>/dev/null | awk '/^branch /{gsub("refs/heads/","",$2); print $2}' | sort -u)
+    if [[ -n $branches ]]; then
+      COMPREPLY=( $(compgen -W "$branches" -- "$cur") )
+    fi
+    return 0
+  fi
+}
+
+# Registra o completion para 'wt'
+# Se estiver no zsh, tente habilitar bashcompinit para compatibilidade
+if [ -n "$ZSH_VERSION" ]; then
+  autoload -Uz bashcompinit 2>/dev/null || true
+  bashcompinit 2>/dev/null || true
+fi
+complete -F _wt_complete wt 2>/dev/null || true
+__WT_BASH_COMPLETION__
+}
+
 # Função de ajuda
 usage() {
-  echo "Uso: $0 <comando> <branch-name> [opções]"
+  echo "Uso: $0 <comando> [branch-name] [opções]"
   echo "Comandos:"
-  echo "  add       Adiciona um novo worktree para a branch fornecida"
-  echo "  ls        Lista os worktrees do repositório git"
-  echo "  rm        Remove o worktree da branch fornecida"
-  echo "  update    Atualiza o script para a versão mais recente"
+  echo "  add         Adiciona um novo worktree para a branch fornecida"
+  echo "  ls          Lista os worktrees do repositório git"
+  echo "  rm          Remove o worktree da branch fornecida"
+  echo "  update      Atualiza o script para a versão mais recente"
+  echo "  completion  Configura a autocompletação Bash permanentemente"
   echo ""
   echo "Opções para 'add':"
   echo "  --ide  Abre o IntelliJ IDEA no diretório do worktree criado"
@@ -60,10 +112,52 @@ fi
 
 COMMAND=$1
 
-# Se o comando for 'update', força a verificação
+# Comandos que não exigem branch ou repositório git podem ser tratados aqui
 if [ "$COMMAND" == "update" ]; then
   check_for_updates
   echo "Você já está na versão mais recente ($VERSION)."
+  exit 0
+fi
+
+if [ "$COMMAND" == "completion" ]; then
+  # Se for chamado via source <(wt completion), apenas emite o script
+  if [[ ! -t 1 ]]; then
+    wt_completion_script
+    exit 0
+  fi
+
+  # Caso contrário, tenta registrar permanentemente
+  echo "Configurando autocompletação Bash..."
+  
+  SHELL_CONFIG=""
+  if [ -f "$HOME/.bashrc" ]; then
+    SHELL_CONFIG="$HOME/.bashrc"
+  elif [ -f "$HOME/.bash_profile" ]; then
+    SHELL_CONFIG="$HOME/.bash_profile"
+  elif [ -f "$HOME/.zshrc" ]; then
+    SHELL_CONFIG="$HOME/.zshrc"
+  fi
+
+  if [ -z "$SHELL_CONFIG" ]; then
+    echo "Erro: Não foi possível encontrar um arquivo de configuração do shell (~/.bashrc, ~/.bash_profile ou ~/.zshrc)."
+    echo "Para ativar manualmente, adicione a seguinte linha ao seu arquivo de configuração:"
+    echo "source <(wt completion)"
+    exit 1
+  fi
+
+  LINE_TO_ADD="source <(wt completion)"
+  if grep -Fq "$LINE_TO_ADD" "$SHELL_CONFIG"; then
+    echo "A autocompletação já está configurada em $SHELL_CONFIG."
+  else
+    echo "" >> "$SHELL_CONFIG"
+    echo "# Autocompletação para o comando 'wt'" >> "$SHELL_CONFIG"
+    echo "$LINE_TO_ADD" >> "$SHELL_CONFIG"
+    echo "Configuração adicionada a $SHELL_CONFIG."
+    echo "Recarregue o seu shell ou execute: source $SHELL_CONFIG"
+  fi
+  
+  # Também emite para o caso de querer usar imediatamente via eval
+  wt_completion_script
   exit 0
 fi
 
@@ -74,8 +168,10 @@ if [ $# -ge 2 ]; then
   check_for_updates
 fi
 
-if [ $# -lt 2 ]; then
-  usage
+if [[ "$COMMAND" == "add" || "$COMMAND" == "rm" ]]; then
+  if [ $# -lt 2 ]; then
+    usage
+  fi
 fi
 
 BRANCH_NAME=$2
@@ -188,12 +284,16 @@ case "$COMMAND" in
     wt_add "$BRANCH_NAME" "$OPEN_IDE"
     ;;
 
+  rm)
+    wt_rm "$BRANCH_NAME"
+    ;;
+
   ls)
     wt_ls
     ;;
 
-  rm)
-    wt_rm "$BRANCH_NAME"
+  completion)
+    # Este caso agora é tratado no início do script para evitar dependências de git root
     ;;
 
   *)
