@@ -3,9 +3,9 @@
 set -e
 
 # Versão atual do script
-VERSION="1.0.1"
-SCRIPT_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/main/wt.sh"
-INSTALLER_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/main/install.sh"
+VERSION="1.0.2"
+SCRIPT_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/refs/heads/main/wt.sh"
+INSTALLER_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/refs/heads/main/install.sh"
 
 # Função para verificar atualizações
 check_for_updates() {

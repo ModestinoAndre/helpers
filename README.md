@@ -7,7 +7,7 @@ Script para gerenciar git worktrees.
 ### Instalação
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/ModestinoAndre/helpers/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/ModestinoAndre/helpers/refs/heads/main/install.sh | bash
 ```
 
 ### Uso:
