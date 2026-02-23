@@ -3,7 +3,7 @@
 set -e
 
 # Versão atual do script
-VERSION="1.0.0"
+VERSION="1.0.1"
 SCRIPT_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/main/wt.sh"
 INSTALLER_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/main/install.sh"
 

@@ -1,13 +1,19 @@
 # helpers
 Scripts utilitários
 
-## wt2.sh
+## wt
 Script para gerenciar git worktrees.
+
+### Instalação
+
+```bash
+curl -sSL https://raw.githubusercontent.com/ModestinoAndre/helpers/main/install.sh | bash
+```
 
 ### Uso:
 ```bash
-./wt2.sh add <branch-name> [--ide]
-./wt2.sh rm <branch-name>
+wt add <branch-name> [--ide]
+wt rm <branch-name>
 ```
 
 - `add`: Cria (ou usa existente) uma branch e adiciona um worktree em `../worktrees/<branch-name>`.
