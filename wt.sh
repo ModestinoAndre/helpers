@@ -2,12 +2,50 @@
 
 set -e
 
+# Versão atual do script
+VERSION="1.0.0"
+SCRIPT_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/main/wt.sh"
+INSTALLER_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/main/install.sh"
+
+# Função para verificar atualizações
+check_for_updates() {
+  # Tenta baixar a versão remota do script para extrair a versão
+  # Usamos um timeout curto para não travar o uso do script se não houver internet
+  REMOTE_VERSION=$(curl -s --connect-timeout 2 "$SCRIPT_URL" | grep "^VERSION=" | head -1 | cut -d'"' -f2)
+
+  if [ -n "$REMOTE_VERSION" ] && [ "$REMOTE_VERSION" != "$VERSION" ]; then
+    echo "Uma nova versão ($REMOTE_VERSION) do 'wt' está disponível. A sua versão atual é $VERSION."
+    read -p "Deseja atualizar agora? (s/N): " update_response
+    case "$update_response" in
+      [sS][iI][mM]|[sS])
+        echo "Iniciando atualização via instalador..."
+        TEMP_INSTALLER=$(mktemp /tmp/wt-install.XXXXXX.sh)
+        if curl -sSL "$INSTALLER_URL" -o "$TEMP_INSTALLER"; then
+          chmod +x "$TEMP_INSTALLER"
+          bash "$TEMP_INSTALLER"
+          rm "$TEMP_INSTALLER"
+          echo "Atualização concluída."
+          exit 0
+        else
+          echo "Erro ao baixar o instalador."
+          rm -f "$TEMP_INSTALLER"
+          exit 1
+        fi
+        ;;
+      *)
+        echo "Pulando atualização."
+        ;;
+    esac
+  fi
+}
+
 # Função de ajuda
 usage() {
   echo "Uso: $0 <comando> <branch-name> [opções]"
   echo "Comandos:"
   echo "  add  Adiciona um novo worktree para a branch fornecida"
   echo "  rm   Remove o worktree da branch fornecida"
+  echo "  update Atualiza o script para a versão mais recente"
   echo ""
   echo "Opções para 'add':"
   echo "  --ide  Abre o IntelliJ IDEA no diretório do worktree criado"
@@ -15,11 +53,30 @@ usage() {
 }
 
 # Verifica se os parâmetros básicos foram fornecidos
-if [ $# -lt 2 ]; then
+if [ $# -lt 1 ]; then
   usage
 fi
 
 COMMAND=$1
+
+# Se o comando for 'update', força a verificação
+if [ "$COMMAND" == "update" ]; then
+  check_for_updates
+  echo "Você já está na versão mais recente ($VERSION)."
+  exit 0
+fi
+
+# Verifica atualizações silenciosamente ou em comandos normais
+# Para evitar lentidão em cada comando, poderíamos salvar a data da última verificação,
+# mas para este exemplo, faremos sempre que houver 2 ou mais argumentos (uso normal).
+if [ $# -ge 2 ]; then
+  check_for_updates
+fi
+
+if [ $# -lt 2 ]; then
+  usage
+fi
+
 BRANCH_NAME=$2
 EXTRA_ARG=$3
 
@@ -78,7 +135,7 @@ add_wt() {
 rm_wt() {
   local branch_name=$1
 
-  GIT_MAIN_DIR=$(dirname $(git rev-parse --git-common-dir))
+  GIT_MAIN_DIR=$(dirname "$(git rev-parse --git-common-dir)")
   echo "GIT_MAIN_DIR: $GIT_MAIN_DIR"
 
   # Verifica se existe um worktree para a branch
