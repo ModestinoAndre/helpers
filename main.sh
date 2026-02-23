@@ -3,8 +3,8 @@
 set -e
 
 # Versão atual do script
-VERSION="1.0.5"
-SCRIPT_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/refs/heads/main/wt.sh"
+VERSION="1.0.6"
+SCRIPT_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/refs/heads/main/dist/wt.sh"
 INSTALLER_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/refs/heads/main/install.sh"
 
 # Carrega funções modularizadas dos snippets

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Pre-commit hook para compilar o wt.sh antes do commit
+
+echo "Executando compile.sh..."
+./compile.sh
+
+# Se o wt.sh foi modificado, adiciona-o ao commit
+if [ -f "dist/wt.sh" ]; then
+    git add dist/wt.sh
+fi

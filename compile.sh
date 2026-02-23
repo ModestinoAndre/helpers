@@ -2,11 +2,14 @@
 
 # Script para compilar o wt.sh a partir do main.sh e dos snippets
 
-OUTPUT_FILE="wt.sh"
+OUTPUT_FILE="dist/wt.sh"
 MAIN_FILE="main.sh"
 SNIPPETS_DIR="snippets"
 
 echo "Compilando $OUTPUT_FILE..."
+
+# Garante que o diretório de saída existe
+mkdir -p "$(dirname "$OUTPUT_FILE")"
 
 # Inicia o arquivo de saída
 cat << 'EOF' > "$OUTPUT_FILE"
