@@ -3,7 +3,7 @@
 set -e
 
 # Versão atual do script
-VERSION="1.0.2"
+VERSION="1.0.3"
 SCRIPT_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/refs/heads/main/wt.sh"
 INSTALLER_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/refs/heads/main/install.sh"
 
@@ -43,9 +43,10 @@ check_for_updates() {
 usage() {
   echo "Uso: $0 <comando> <branch-name> [opções]"
   echo "Comandos:"
-  echo "  add  Adiciona um novo worktree para a branch fornecida"
-  echo "  rm   Remove o worktree da branch fornecida"
-  echo "  update Atualiza o script para a versão mais recente"
+  echo "  add       Adiciona um novo worktree para a branch fornecida"
+  echo "  ls        Lista os worktrees do repositório git"
+  echo "  rm        Remove o worktree da branch fornecida"
+  echo "  update    Atualiza o script para a versão mais recente"
   echo ""
   echo "Opções para 'add':"
   echo "  --ide  Abre o IntelliJ IDEA no diretório do worktree criado"
@@ -89,7 +90,7 @@ if [ -z "$GIT_ROOT" ]; then
 fi
 
 # Função para adicionar worktree
-add_wt() {
+wt_add() {
   local branch_name=$1
   local open_ide=$2
 
@@ -131,8 +132,12 @@ add_wt() {
   echo "cd $TARGET_PATH"
 }
 
+wt_ls() {
+  git worktree list
+}
+
 # Função para remover worktree
-rm_wt() {
+wt_rm() {
   local branch_name=$1
 
   GIT_MAIN_DIR=$(dirname "$(git rev-parse --git-common-dir)")
@@ -180,11 +185,15 @@ case "$COMMAND" in
     if [ "$EXTRA_ARG" == "--ide" ]; then
       OPEN_IDE=true
     fi
-    add_wt "$BRANCH_NAME" "$OPEN_IDE"
+    wt_add "$BRANCH_NAME" "$OPEN_IDE"
+    ;;
+
+  ls)
+    wt_ls
     ;;
 
   rm)
-    rm_wt "$BRANCH_NAME"
+    wt_rm "$BRANCH_NAME"
     ;;
 
   *)
