@@ -3,7 +3,7 @@
 set -e
 
 # Repositório URL
-SCRIPT_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/main/wt.sh"
+SCRIPT_URL="https://raw.githubusercontent.com/ModestinoAndre/helpers/refs/heads/main/dist/wt.sh"
 
 # Diretório de instalação
 INSTALL_DIR="/usr/local/bin"
